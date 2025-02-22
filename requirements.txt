@@ -1,8 +1,8 @@
-streamlit==1.17.0
-pandas==1.5.1
-tweepy==4.11.0
-wordcloud==1.8.2.2
-matplotlib==3.5.1
-spacy==3.2.4
-nltk==3.7
-python-dotenv==0.19.2
+streamlit
+pandas
+tweepy
+wordcloud
+matplotlib
+spacy
+nltk
+python-dotenv
