@@ -6,3 +6,6 @@ matplotlib
 spacy
 nltk
 python-dotenv
+torch
+transformers
+plotly
