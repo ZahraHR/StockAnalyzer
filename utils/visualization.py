@@ -60,9 +60,65 @@ def plot_pie_chart(data):
         names='Sentiment',
         values='Count',
         title="Category Sentiment",
-        color_discrete_sequence=px.colors.qualitative.Pastel,  # Soft colors
-        hole=0.3  # Creates a donut chart effect
+        color_discrete_sequence=px.colors.qualitative.Pastel,
+        hole=0.3
     )
 
-    fig.update_traces(textinfo='percent+label', pull=[0.1, 0, 0])  # Slightly pull out one slice for emphasis
+    fig.update_traces(textinfo='percent+label', pull=[0.1, 0, 0])
+    return fig
+
+
+import pandas as pd
+import plotly.graph_objects as go
+
+
+def plot_top5_sentiment_multibar(tweet_df):
+    """
+    Create an interactive multi-bar plot showing sentiment distribution for the top 5 companies
+    with the highest number of positive sentiment tweets.
+
+    Parameters:
+    - tweet_df (pd.DataFrame): DataFrame with 'bert_orgs' (companies) and 'polarity_predictions' (sentiment categories).
+
+    Returns:
+    - fig (plotly.graph_objects.Figure): The interactive plotly figure.
+    """
+
+    df = tweet_df.explode("bert_orgs")
+
+    sentiment_counts = df.groupby("bert_orgs")["polarity_predictions"].value_counts().unstack().fillna(0)
+
+    sentiment_percent = sentiment_counts.div(sentiment_counts.sum(axis=1), axis=0) * 100
+
+    top5_sentiment_counts = sentiment_counts.sort_values("positive", ascending=False).head(5)
+    top5_sentiment_percent = sentiment_percent.loc[top5_sentiment_counts.index]
+
+    traces = []
+    for sentiment in top5_sentiment_counts.columns:
+        trace = go.Bar(
+            x=top5_sentiment_counts.index,
+            y=top5_sentiment_counts[sentiment],
+            name=sentiment,
+            hoverinfo="x+y+text",
+            text=top5_sentiment_percent[sentiment].round(1).astype(str) + "%",
+            textposition='inside',
+            marker=dict(color={"negative": "red", "neutral": "gray", "positive": "green"}[sentiment]),
+            offsetgroup=sentiment
+        )
+        traces.append(trace)
+
+    layout = go.Layout(
+        title="Top 5 Companies by Count of Positive Sentiment Tweets",
+        xaxis=dict(title="Company"),
+        yaxis=dict(title="Number of Tweets"),
+        barmode="stack",
+        bargap=0.1,
+        hovermode="x unified",
+        legend_title="Sentiment",
+        template="plotly_white",
+        xaxis_tickangle=-45,
+    )
+
+    fig = go.Figure(data=traces, layout=layout)
+
     return fig
