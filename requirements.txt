@@ -8,4 +8,6 @@ nltk
 python-dotenv
 torch
 transformers
+evaluate
 plotly
+seaborn
