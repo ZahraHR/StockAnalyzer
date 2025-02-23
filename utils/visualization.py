@@ -5,6 +5,7 @@ import plotly.express as px
 from collections import Counter
 from itertools import chain
 import pandas as pd
+import seaborn as sns
 
 def generate_wordcloud(texts):
     """Créer et afficher un wordcloud avec Matplotlib"""
@@ -41,3 +42,27 @@ def plot_top_orgs(data, top_n=10):
                  text_auto=True)
 
     return df_top_counts, fig
+
+
+def plot_pie_chart(data):
+    """
+    Paramètres :
+    - data (pd.Series) : Série de prédictions de polarité.
+
+    Retour :
+    - fig : Graphique circulaire interactif.
+    """
+    counts = data.value_counts().reset_index()
+    counts.columns = ['Sentiment', 'Count']
+
+    fig = px.pie(
+        counts,
+        names='Sentiment',
+        values='Count',
+        title="Category Sentiment",
+        color_discrete_sequence=px.colors.qualitative.Pastel,  # Soft colors
+        hole=0.3  # Creates a donut chart effect
+    )
+
+    fig.update_traces(textinfo='percent+label', pull=[0.1, 0, 0])  # Slightly pull out one slice for emphasis
+    return fig
