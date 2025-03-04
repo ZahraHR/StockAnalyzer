@@ -1,4 +1,6 @@
 import yfinance as yf
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 def get_stock_data(ticker, period="5y"):
     """Télécharge les données boursières d'un ticker spécifique."""
@@ -38,10 +40,6 @@ def calculate_rsi(data, window=14):
     loss = (-delta.where(delta < 0, 0)).rolling(window=window).mean()
     rs = gain / loss
     return 100 - (100 / (1 + rs))
-
-
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 
 def plot_stock_indicators(stock_data, selected_company):
 
