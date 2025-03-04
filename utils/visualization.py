@@ -1,14 +1,16 @@
-import matplotlib.pyplot as plt
-from wordcloud import WordCloud
-import streamlit as st
-import plotly.express as px
-from collections import Counter
-from itertools import chain
 import pandas as pd
-import seaborn as sns
+
+import matplotlib.pyplot as plt
+import plotly.express as px
+import plotly.graph_objects as go
+from wordcloud import WordCloud
+from .predictions import process_tweet_data
+
+import streamlit as st
+from collections import Counter
+
 
 def generate_wordcloud(texts):
-    """Créer et afficher un wordcloud avec Matplotlib"""
     wordcloud = WordCloud(max_words=100, width=800, height=400).generate(" ".join(texts))
 
     fig, ax = plt.subplots()
@@ -18,22 +20,7 @@ def generate_wordcloud(texts):
     st.pyplot(fig)
 
 
-def plot_top_orgs(data, top_n=10):
-    """
-    Retourne un DataFrame des organisations les plus fréquentes et un graphique interactif.
-
-    Paramètres :
-    - data (pd.Series) : Série contenant des listes d'organisations.
-    - top_n (int) : Nombre d'organisations à afficher (par défaut 10).
-
-    Retour :
-    - df_top_counts (pd.DataFrame) : DataFrame des organisations les plus fréquentes.
-    - fig (plotly.graph_objects.Figure) : Graphique interactif Plotly.
-    """
-    all_values = list(chain(*data.apply(lambda x: list(set(x))).values))
-    value_counts = Counter(all_values)
-
-    df_counts = pd.DataFrame(value_counts.items(), columns=["Value", "Count"]).sort_values(by="Count", ascending=False)
+def plot_top_orgs(df_counts, top_n):
 
     df_top_counts = df_counts.head(top_n)
 
@@ -45,13 +32,6 @@ def plot_top_orgs(data, top_n=10):
 
 
 def plot_pie_chart(data):
-    """
-    Paramètres :
-    - data (pd.Series) : Série de prédictions de polarité.
-
-    Retour :
-    - fig : Graphique circulaire interactif.
-    """
     counts = data.value_counts().reset_index()
     counts.columns = ['Sentiment', 'Count']
 
@@ -68,29 +48,13 @@ def plot_pie_chart(data):
     return fig
 
 
-import pandas as pd
-import plotly.graph_objects as go
-
-
-def plot_top5_sentiment_multibar(tweet_df):
-    """
-    Create an interactive multi-bar plot showing sentiment distribution for the top 5 companies
-    with the highest number of positive sentiment tweets.
-
-    Parameters:
-    - tweet_df (pd.DataFrame): DataFrame with 'bert_orgs' (companies) and 'polarity_predictions' (sentiment categories).
-
-    Returns:
-    - fig (plotly.graph_objects.Figure): The interactive plotly figure.
-    """
-
-    df = tweet_df.explode("bert_orgs")
+def plot_top_n_sentiment_multibar(df, top_n):
 
     sentiment_counts = df.groupby("bert_orgs")["polarity_predictions"].value_counts().unstack().fillna(0)
 
     sentiment_percent = sentiment_counts.div(sentiment_counts.sum(axis=1), axis=0) * 100
 
-    top5_sentiment_counts = sentiment_counts.sort_values("positive", ascending=False).head(5)
+    top5_sentiment_counts = sentiment_counts.sort_values("positive", ascending=False).head(top_n)
     top5_sentiment_percent = sentiment_percent.loc[top5_sentiment_counts.index]
 
     traces = []
@@ -108,7 +72,7 @@ def plot_top5_sentiment_multibar(tweet_df):
         traces.append(trace)
 
     layout = go.Layout(
-        title="Top 5 Companies by Count of Positive Sentiment Tweets",
+        title=f"Top {top_n} Companies by Count of Positive Sentiment Tweets",
         xaxis=dict(title="Company"),
         yaxis=dict(title="Number of Tweets"),
         barmode="stack",
@@ -122,3 +86,39 @@ def plot_top5_sentiment_multibar(tweet_df):
     fig = go.Figure(data=traces, layout=layout)
 
     return fig
+
+
+def plot_top_organizations(tweet_df, top_n=5):
+    """Affiche un graphique des principales organisations mentionnées"""
+    df = tweet_df.explode("bert_orgs").dropna(subset=["bert_orgs"])
+    value_counts = Counter(df["bert_orgs"])
+    df_counts = pd.DataFrame(value_counts.items(), columns=["Value", "Count"]).sort_values(by="Count", ascending=False)
+
+    df_top, fig = plot_top_orgs(df_counts, top_n=top_n)
+    st.write(df_top)
+    st.plotly_chart(fig)
+
+
+def display_visualizations(tweet_df):
+    """Gère l'affichage des visualisations"""
+    visualize_option = st.sidebar.radio("Choose an option", ("Word Cloud", "Bar Plot"))
+
+    if visualize_option == "Word Cloud":
+        st.title("Word Cloud")
+        generate_wordcloud(tweet_df["processed_text"])
+
+    elif visualize_option == "Bar Plot":
+        top_n = st.sidebar.slider("Number of top organizations to display", min_value=1, max_value=10, value=5)
+        plot_top_organizations(tweet_df, top_n)
+
+
+def display_predictions(tweet_df):
+    """Affiche les prédictions et les graphiques associés"""
+    tweet_df = process_tweet_data(tweet_df)
+
+    fig = plot_pie_chart(tweet_df["polarity_predictions"])
+    st.plotly_chart(fig)
+
+    df = tweet_df.explode("bert_orgs").dropna(subset=["bert_orgs"])
+    top_n = st.sidebar.slider("Number of top organizations to display", min_value=1, max_value=10, value=5)
+    st.plotly_chart(plot_top_n_sentiment_multibar(df, top_n))

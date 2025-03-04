@@ -1,69 +1,50 @@
-import streamlit as st
 import pandas as pd
-from io import StringIO
+import streamlit as st
+from utils.twitter_api import load_tweets
+from utils.visualization import display_visualizations, display_predictions
+from utils.stock_utils import get_stock_data, calculate_indicators, plot_stock_indicators
 
-# Importer les modules utils
-from utils.preprocessing import preprocess, basic_cleaning, dslim_bert_ner_get_ent
-from utils.twitter_api import fetch_tweets
-from utils.visualization import generate_wordcloud, plot_top_orgs, plot_pie_chart, plot_top5_sentiment_multibar
-from transformers import pipeline
-
-
-finbert = pipeline('sentiment-analysis', model='ProsusAI/finbert')
 
 
 st.sidebar.title("Stock Analysis")
-option = st.sidebar.radio("What do you want to analyze", ("Twitter Sentiment Analysis", "Other"))
-
-
-def load_tweets():
-    tweet_df = None
-    if st.sidebar.radio("Choose an option", ("Upload CSV", "Fetch Tweets")) == "Upload CSV":
-        uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
-        if uploaded_file is not None:
-            data = StringIO(uploaded_file.getvalue().decode("utf-8"))
-            tweet_df = pd.read_csv(data)
-    elif st.sidebar.radio("Choose an option", ("Upload CSV", "Fetch Tweets")) == "Fetch Tweets":
-        query = st.text_input("Enter your query (e.g., 'Tech Stocks -is:retweet lang:en')", "Tech Stocks -is:retweet lang:en")
-        if query:
-            tweet_data = fetch_tweets(query)
-            if tweet_data:
-                tweet_df = pd.DataFrame(tweet_data)
-    return tweet_df
+option = st.sidebar.radio("What do you want to analyze", ("Twitter Sentiment Analysis", "Stock Market Analysis"))
 
 if option == "Twitter Sentiment Analysis":
     tweet_df = load_tweets()
-
     if tweet_df is not None:
         st.session_state.df = tweet_df
-        num_rows = st.slider("How many rows to display?", min_value=1, max_value=len(tweet_df), value=5)
+
+        num_rows = st.slider("How many rows to display?", 1, len(tweet_df), 5)
         st.write(f"Displaying {num_rows} rows of data:")
         st.write(tweet_df.head(num_rows))
 
         analysis_option = st.sidebar.radio("Choose an option", ("Visualization", "Predictions"))
 
         if analysis_option == "Visualization":
-            visualize_option = st.sidebar.radio("Choose an option", ("Word Cloud", "Bar Plot"))
-            if visualize_option == "Word Cloud":
-                st.title("Word Cloud")
-                tweet_df["processed_text"] = tweet_df["text"].apply(preprocess)
-                generate_wordcloud(tweet_df["processed_text"])
-            elif visualize_option == "Bar Plot":
-                tweet_df["cleaned_text"] = tweet_df["text"].apply(lambda x: basic_cleaning(x))
-                tweet_df["bert_orgs"] = tweet_df.cleaned_text.apply(lambda x: dslim_bert_ner_get_ent(x))
-                df_top, fig = plot_top_orgs(tweet_df["bert_orgs"], top_n=5)
-                st.write(df_top)
-                st.plotly_chart(fig)
-
+            display_visualizations(tweet_df)
         elif analysis_option == "Predictions":
-            tweet_df["cleaned_text"] = tweet_df["text"].apply(lambda x: basic_cleaning(x))
-            tweet_df["polarity_predictions"] = tweet_df["cleaned_text"].apply(lambda x: finbert(x)[0]['label'])
+            display_predictions(tweet_df)
 
-            fig = plot_pie_chart(tweet_df["polarity_predictions"])
-            st.plotly_chart(fig)
 
-            tweet_df["bert_orgs"] = tweet_df.cleaned_text.apply(lambda x: dslim_bert_ner_get_ent(x))
-            fig = plot_top5_sentiment_multibar(tweet_df)
-            st.plotly_chart(fig)
+if option == "Stock Market Analysis":
+    url = "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies"
+    tables = pd.read_html(url)
 
-# streamlit run app.py
+    company_df = tables[0][["Security", "Symbol"]]
+    company_dict = dict(zip(company_df["Security"], company_df["Symbol"]))
+
+    selected_company = st.sidebar.selectbox("Search for a company", options=[""] + list(company_dict.keys()))
+    if selected_company:
+        stock_symbol = company_dict[selected_company]
+        st.sidebar.write(f"**Selected Ticker:** {stock_symbol}")
+
+        stock_data = get_stock_data(stock_symbol)
+        stock_data = calculate_indicators(stock_data)
+
+        fig = plot_stock_indicators(stock_data, selected_company)
+
+        # ---- Display Data and Plot ----
+        st.write(f"### Showing data for {selected_company} ({stock_symbol})")
+        st.write(stock_data.head())
+
+        st.plotly_chart(fig, use_container_width=True)
