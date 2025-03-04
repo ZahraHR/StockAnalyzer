@@ -11,3 +11,5 @@ transformers
 evaluate
 plotly
 seaborn
+yfinance
+lxml

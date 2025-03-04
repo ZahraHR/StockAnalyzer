@@ -1,18 +1,7 @@
 import re
-import spacy
-from transformers import pipeline
 from typing import List
-import logging
 
-try:
-    nlp = spacy.load("en_core_web_sm")
-except OSError:
-    print("Downloading SpaCy model: en_core_web_sm...")
-    spacy.cli.download("en_core_web_sm")
-    nlp = spacy.load("en_core_web_sm")
-
-# Use spaCy's stopwords set
-stopwords_set = nlp.Defaults.stop_words
+from .models import *
 
 def basic_cleaning(text: str) -> str:
     """Nettoyage de base du texte"""
@@ -22,8 +11,7 @@ def basic_cleaning(text: str) -> str:
     text = text.replace("#", "")
     return text
 
-def preprocess(text: str) -> str:
-    """Appliquer le prétraitement au texte"""
+def nlp_preprocess(text: str) -> str:
     text = basic_cleaning(text)
     doc = nlp(text)
     tokens = [token.lemma_ for token in doc if token.text.lower() not in stopwords_set]
@@ -31,7 +19,6 @@ def preprocess(text: str) -> str:
 
 
 def remove_subwords(tokens: List[str]) -> List[str]:
-    """Remove subword tokens (e.g., ##) and combine them with the previous token."""
     if tokens:
       cleaned_tokens = [tokens[0]]
 
@@ -44,10 +31,7 @@ def remove_subwords(tokens: List[str]) -> List[str]:
 
     return []
 
-ner_pipeline = pipeline("ner", model="dslim/bert-base-NER", aggregation_strategy="simple")
-logging.getLogger("transformers").setLevel(logging.ERROR)
 def dslim_bert_ner_get_ent(text: str):
-    """Extraction d'entités avec le pipeline BERT de HuggingFace"""
 
     results = ner_pipeline(text)
 
@@ -57,4 +41,3 @@ def dslim_bert_ner_get_ent(text: str):
     companies_cleaned = remove_subwords(companies)
 
     return companies_cleaned
-
