@@ -1,5 +1,6 @@
 import pandas as pd
 import streamlit as st
+
 from utils.twitter_api import load_tweets
 from utils.visualization import display_visualizations, display_predictions
 from utils.stock_utils import get_stock_data, calculate_indicators, plot_stock_indicators
