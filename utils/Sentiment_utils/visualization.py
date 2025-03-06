@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import plotly.express as px
 import plotly.graph_objects as go
 from wordcloud import WordCloud
-from .predictions import process_tweet_data
+from .predictions import predict_tweet_sentiment
 
 import streamlit as st
 from collections import Counter
@@ -114,7 +114,7 @@ def display_visualizations(tweet_df):
 
 def display_predictions(tweet_df):
     """Affiche les prédictions et les graphiques associés"""
-    tweet_df = process_tweet_data(tweet_df)
+    tweet_df = predict_tweet_sentiment(tweet_df)
 
     fig = plot_pie_chart(tweet_df["polarity_predictions"])
     st.plotly_chart(fig)

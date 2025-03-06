@@ -3,13 +3,11 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 def get_stock_data(ticker, period="5y"):
-    """Télécharge les données boursières d'un ticker spécifique."""
     stock = yf.Ticker(ticker)
     stock_data = stock.history(period=period).sort_index()
     return stock_data
 
 def calculate_indicators(stock_data):
-    """Ajoute les indicateurs techniques au dataframe stock_data."""
     # Moving Averages
     stock_data['50_SMA'] = stock_data['Close'].rolling(window=50).mean()
     stock_data['200_SMA'] = stock_data['Close'].rolling(window=200).mean()
@@ -34,7 +32,6 @@ def calculate_indicators(stock_data):
     return stock_data
 
 def calculate_rsi(data, window=14):
-    """Calcule l'indicateur RSI."""
     delta = data['Close'].diff()
     gain = (delta.where(delta > 0, 0)).rolling(window=window).mean()
     loss = (-delta.where(delta < 0, 0)).rolling(window=window).mean()
@@ -76,7 +73,6 @@ def plot_stock_indicators(stock_data, selected_company):
     fig.add_trace(go.Scatter(x=stock_data.index, y=stock_data['Signal_Line'], mode='lines',
                                  name='Signal Line', line=dict(color='#d62728')), row=3, col=1)
 
-        # ---- Plot Volume ----
     fig.add_trace(go.Bar(
             x=stock_data.index,
             y=stock_data['Volume'],
@@ -84,13 +80,12 @@ def plot_stock_indicators(stock_data, selected_company):
             marker=dict(color='#1f77b4', opacity=0.9)
         ), row=4, col=1)
 
-        # ---- Layout Customization ----
     fig.update_layout(
             height=1500, width=1200, title_text=f"{selected_company} Stock Market Analysis (Interactive)",
             showlegend=True,
             xaxis_rangeslider_visible=False,
             plot_bgcolor='white',
             font=dict(color='black'),
-            hovermode="x unified"  # Synchronise l'affichage des valeurs sur tous les graphes
+            hovermode="x unified"
         )
     return fig
