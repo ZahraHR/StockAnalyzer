@@ -2,13 +2,31 @@ import pandas as pd
 import streamlit as st
 
 from utils.Sentiment_utils.twitter_api import load_tweets
-from utils.Sentiment_utils.visualization import display_visualizations, display_predictions
+from utils.Sentiment_utils.visualization import get_visualization, display_predictions
 from utils.Stock_utils.indicator_utils import get_stock_data, calculate_indicators, plot_stock_indicators
 
 from utils.Stock_utils.data_utils import load_and_scale_data, split_data, create_sequence
 from utils.Stock_utils.model_utils import build_lstm_model, train_lstm_model
 from utils.Stock_utils.plot_utils import plot_loss, plot_stock_data
 from sklearn.metrics import r2_score
+
+def display_visualizations(df):
+    visualize_option = st.sidebar.radio("Choose an option", ("Word Cloud", "Bar Plot"))
+
+    top_n = None
+    if visualize_option == "Bar Plot":
+        top_n = st.sidebar.slider("Number of top organizations to display", min_value=1, max_value=10, value=5)
+
+    result1, result2 = get_visualization(df, visualize_option, top_n)
+
+    if visualize_option == "Word Cloud":
+        st.title("Word Cloud")
+        st.pyplot(result2)
+
+    elif visualize_option == "Bar Plot":
+        st.title("Top Organizations Bar Plot")
+        st.write(result1)
+        st.plotly_chart(result2)
 
 st.sidebar.title("Stock Analysis")
 option = st.sidebar.radio("What do you want to analyze", ("Twitter Sentiment Analysis", "Stock Market Analysis"))

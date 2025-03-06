@@ -17,7 +17,7 @@ def generate_wordcloud(texts):
     ax.imshow(wordcloud, interpolation="bilinear")
     ax.axis("off")
 
-    st.pyplot(fig)
+    return fig
 
 
 def plot_top_orgs(df_counts, top_n):
@@ -88,28 +88,25 @@ def plot_top_n_sentiment_multibar(df, top_n):
     return fig
 
 
-def plot_top_organizations(tweet_df, top_n=5):
-    """Affiche un graphique des principales organisations mentionnées"""
-    df = tweet_df.explode("bert_orgs").dropna(subset=["bert_orgs"])
+def process_top_organizations(df, top_n=5):
+    df = df.explode("bert_orgs").dropna(subset=["bert_orgs"])
     value_counts = Counter(df["bert_orgs"])
     df_counts = pd.DataFrame(value_counts.items(), columns=["Value", "Count"]).sort_values(by="Count", ascending=False)
 
     df_top, fig = plot_top_orgs(df_counts, top_n=top_n)
-    st.write(df_top)
-    st.plotly_chart(fig)
+    return df_top, fig
 
 
-def display_visualizations(tweet_df):
-    """Gère l'affichage des visualisations"""
-    visualize_option = st.sidebar.radio("Choose an option", ("Word Cloud", "Bar Plot"))
-
+def get_visualization(df, visualize_option, top_n=5):
     if visualize_option == "Word Cloud":
-        st.title("Word Cloud")
-        generate_wordcloud(tweet_df["processed_text"])
+        fig = generate_wordcloud(df["processed_text"])
+        return  None, fig
 
     elif visualize_option == "Bar Plot":
-        top_n = st.sidebar.slider("Number of top organizations to display", min_value=1, max_value=10, value=5)
-        plot_top_organizations(tweet_df, top_n)
+        df_top, fig = process_top_organizations(df, top_n)
+        return df_top, fig
+
+    return None, None
 
 
 def display_predictions(tweet_df):
