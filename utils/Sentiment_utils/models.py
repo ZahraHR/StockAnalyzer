@@ -1,7 +1,8 @@
+import logging
+
+import streamlit as st
 import spacy
 from transformers import pipeline
-import logging
-import streamlit as st
 
 try:
     nlp = spacy.load("en_core_web_sm")

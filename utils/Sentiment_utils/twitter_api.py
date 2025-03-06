@@ -1,18 +1,19 @@
 import os
-import tweepy
-import streamlit as st
-from dotenv import load_dotenv
-from .predictions import process_tweets
 from io import StringIO
+
 import pandas as pd
-# Charger les variables d'environnement
+import streamlit as st
+import tweepy
+from dotenv import load_dotenv
+
+from .predictions import process_tweets
+
 load_dotenv()
 bearer_token = os.getenv("TWITTER_BEARER_TOKEN")
 client = tweepy.Client(bearer_token=bearer_token)
 
 
 def fetch_tweets(query: str, max_results=100):
-    """Récupérer les tweets selon la requête"""
     tweets = client.search_recent_tweets(
         query=query, max_results=max_results, tweet_fields=["text", "created_at"]
     )

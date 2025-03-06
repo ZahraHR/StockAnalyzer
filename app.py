@@ -1,11 +1,14 @@
 import pandas as pd
 import streamlit as st
 
-from utils.twitter_api import load_tweets
-from utils.visualization import display_visualizations, display_predictions
-from utils.stock_utils import get_stock_data, calculate_indicators, plot_stock_indicators
+from utils.Sentiment_utils.twitter_api import load_tweets
+from utils.Sentiment_utils.visualization import display_visualizations, display_predictions
+from utils.Stock_utils.indicator_utils import get_stock_data, calculate_indicators, plot_stock_indicators
 
-
+from utils.Stock_utils.data_utils import load_and_scale_data, split_data, create_sequence
+from utils.Stock_utils.model_utils import build_lstm_model, train_lstm_model
+from utils.Stock_utils.plot_utils import plot_loss, plot_stock_data
+from sklearn.metrics import r2_score
 
 st.sidebar.title("Stock Analysis")
 option = st.sidebar.radio("What do you want to analyze", ("Twitter Sentiment Analysis", "Stock Market Analysis"))
@@ -28,6 +31,8 @@ if option == "Twitter Sentiment Analysis":
 
 
 if option == "Stock Market Analysis":
+    stock_option = st.sidebar.radio("Choose an option:", ["Stock Market Analysis", "Stock Price Prediction"])
+
     url = "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies"
     tables = pd.read_html(url)
 
@@ -35,6 +40,7 @@ if option == "Stock Market Analysis":
     company_dict = dict(zip(company_df["Security"], company_df["Symbol"]))
 
     selected_company = st.sidebar.selectbox("Search for a company", options=[""] + list(company_dict.keys()))
+
     if selected_company:
         stock_symbol = company_dict[selected_company]
         st.sidebar.write(f"**Selected Ticker:** {stock_symbol}")
@@ -42,10 +48,36 @@ if option == "Stock Market Analysis":
         stock_data = get_stock_data(stock_symbol)
         stock_data = calculate_indicators(stock_data)
 
-        fig = plot_stock_indicators(stock_data, selected_company)
+        if stock_option == "Stock Market Analysis":
 
-        # ---- Display Data and Plot ----
-        st.write(f"### Showing data for {selected_company} ({stock_symbol})")
-        st.write(stock_data.head())
+            fig = plot_stock_indicators(stock_data, selected_company)
 
-        st.plotly_chart(fig, use_container_width=True)
+            st.write(f"### Showing data for {selected_company} ({stock_symbol})")
+            st.write(stock_data.head())
+
+            st.plotly_chart(fig, use_container_width=True)
+        elif stock_option == "Stock Price Prediction":
+            st.write(f"### Predicting stock prices for {selected_company} ({stock_symbol})")
+
+            feature_transform, scaler = load_and_scale_data(stock_data)
+            X_train, X_val, X_test = split_data(feature_transform)
+
+            train_seq, train_label = create_sequence(X_train)
+            val_seq, val_label = create_sequence(X_val)
+            test_seq, test_label = create_sequence(X_test)
+
+            model = build_lstm_model((30, 1))
+            model, history = train_lstm_model(model, train_seq, train_label, val_seq, val_label)
+
+            fig = plot_loss(history)
+            st.plotly_chart(fig, use_container_width=True)
+
+            test_predicted = model.predict(test_seq)
+            inv_pred = scaler.inverse_transform(test_predicted)
+            inv_actual = scaler.inverse_transform(test_label)
+
+            r2 = r2_score(inv_actual, inv_pred)
+            st.write(f"**R² Score:** {r2:.4f}")
+
+            fig = plot_stock_data(stock_data, inv_pred, stock_data.shape[0] - inv_pred.shape[0])
+            st.plotly_chart(fig, use_container_width=True)

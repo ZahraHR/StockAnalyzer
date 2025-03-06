@@ -4,7 +4,6 @@ from typing import List
 from .models import *
 
 def basic_cleaning(text: str) -> str:
-    """Nettoyage de base du texte"""
     text = re.sub(r"http[s]?://\S+|www\.\S+", "", text)
     text = re.sub(r"@\w+", "", text)
     text = re.sub(r"[^a-zA-Z0-9% ]", " ", text)
@@ -31,13 +30,3 @@ def remove_subwords(tokens: List[str]) -> List[str]:
 
     return []
 
-def dslim_bert_ner_get_ent(text: str):
-
-    results = ner_pipeline(text)
-
-    companies = [entity['word'] for entity in results if entity['entity_group'] == "ORG"]
-
-    # Post-process to combine subword tokens (like "B" and "##YD")
-    companies_cleaned = remove_subwords(companies)
-
-    return companies_cleaned
