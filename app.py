@@ -14,7 +14,16 @@ st.sidebar.title("Stock Analysis")
 option = st.sidebar.radio("What do you want to analyze", ("Twitter Sentiment Analysis", "Stock Market Analysis"))
 
 if option == "Twitter Sentiment Analysis":
-    tweet_df = load_tweets()
+    tweet_option = st.sidebar.radio("Choose an option", ("Upload CSV", "Fetch Tweets"))
+    uploaded_file = None
+    query = None
+    if tweet_option == "Upload CSV":
+        uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
+    elif tweet_option == "Fetch Tweets":
+        query = st.text_input("Enter your query", "Tech Stocks -is:retweet lang:en")
+
+    tweet_df = load_tweets(tweet_option, uploaded_file, query)
+
     if tweet_df is not None:
         st.session_state.df = tweet_df
 
