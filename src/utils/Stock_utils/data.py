@@ -1,9 +1,9 @@
 import pandas as pd
 import numpy as np
-from typing import List, Tuple
+from typing import Tuple
 from sklearn.preprocessing import MinMaxScaler
 
-def load_and_scale_data(df: pd.DataFrame) -> tuple[pd.DataFrame, MinMaxScaler]:
+def load_and_scale_data(df: pd.DataFrame) -> Tuple[pd.DataFrame, MinMaxScaler]:
     features = ['Close']
     scaler = MinMaxScaler()
     feature_transform = scaler.fit_transform(df[features])
