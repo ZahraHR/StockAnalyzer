@@ -30,7 +30,6 @@ def plot_top_orgs(df_counts, top_n):
 
     return df_top_counts, fig
 
-
 def plot_pie_chart(data):
     counts = data.value_counts().reset_index()
     counts.columns = ['Sentiment', 'Count']
@@ -47,24 +46,23 @@ def plot_pie_chart(data):
     fig.update_traces(textinfo='percent+label', pull=[0.1, 0, 0])
     return fig
 
-
 def plot_top_n_sentiment_multibar(df, top_n):
 
     sentiment_counts = df.groupby("bert_orgs")["polarity_predictions"].value_counts().unstack().fillna(0)
 
     sentiment_percent = sentiment_counts.div(sentiment_counts.sum(axis=1), axis=0) * 100
 
-    top5_sentiment_counts = sentiment_counts.sort_values("positive", ascending=False).head(top_n)
-    top5_sentiment_percent = sentiment_percent.loc[top5_sentiment_counts.index]
+    top_n_sentiment_counts = sentiment_counts.sort_values("positive", ascending=False).head(top_n)
+    top_n_sentiment_percent = sentiment_percent.loc[top_n_sentiment_counts.index]
 
     traces = []
-    for sentiment in top5_sentiment_counts.columns:
+    for sentiment in top_n_sentiment_counts.columns:
         trace = go.Bar(
-            x=top5_sentiment_counts.index,
-            y=top5_sentiment_counts[sentiment],
+            x=top_n_sentiment_counts.index,
+            y=top_n_sentiment_counts[sentiment],
             name=sentiment,
             hoverinfo="x+y+text",
-            text=top5_sentiment_percent[sentiment].round(1).astype(str) + "%",
+            text=top_n_sentiment_percent[sentiment].round(1).astype(str) + "%",
             textposition='inside',
             marker=dict(color={"negative": "red", "neutral": "gray", "positive": "green"}[sentiment]),
             offsetgroup=sentiment
@@ -87,7 +85,6 @@ def plot_top_n_sentiment_multibar(df, top_n):
 
     return fig
 
-
 def process_top_organizations(df, top_n=5):
     df = df.explode("bert_orgs").dropna(subset=["bert_orgs"])
     value_counts = Counter(df["bert_orgs"])
@@ -95,7 +92,6 @@ def process_top_organizations(df, top_n=5):
 
     df_top, fig = plot_top_orgs(df_counts, top_n=top_n)
     return df_top, fig
-
 
 def get_visualization(df, visualize_option, top_n=5):
     if visualize_option == "Word Cloud":
@@ -108,9 +104,7 @@ def get_visualization(df, visualize_option, top_n=5):
 
     return None, None
 
-
 def display_predictions(tweet_df):
-    """Affiche les prédictions et les graphiques associés"""
     tweet_df = predict_tweet_sentiment(tweet_df)
 
     fig = plot_pie_chart(tweet_df["polarity_predictions"])
@@ -119,3 +113,13 @@ def display_predictions(tweet_df):
     df = tweet_df.explode("bert_orgs").dropna(subset=["bert_orgs"])
     top_n = st.sidebar.slider("Number of top organizations to display", min_value=1, max_value=10, value=5)
     st.plotly_chart(plot_top_n_sentiment_multibar(df, top_n))
+
+def get_predictions_and_figures(tweet_df, top_n=5):
+    tweet_df = predict_tweet_sentiment(tweet_df)
+
+    pie_chart_fig = plot_pie_chart(tweet_df["polarity_predictions"])
+
+    df = tweet_df.explode("bert_orgs").dropna(subset=["bert_orgs"])
+    multibar_fig = plot_top_n_sentiment_multibar(df, top_n)
+
+    return pie_chart_fig, multibar_fig
