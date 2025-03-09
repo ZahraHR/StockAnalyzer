@@ -1,4 +1,4 @@
-# Twitter Stock Sentiment Analysis 📊
+# Twitter Stock Sentiment Analysis 
 
 ## Overview
 
