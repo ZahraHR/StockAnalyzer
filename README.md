@@ -1,6 +1,6 @@
 # Twitter Stock Sentiment Analysis 📊
 
-## 📌 Overview
+## Overview
 
 **Twitter Stock Sentiment Analysis** is a data-driven project designed to analyze financial markets using real-time Twitter sentiment and stock market data. The project consists of three main components:
 
@@ -10,9 +10,9 @@
 
 ---
 
-## 🚀 Features
+## Features
 
-### 📝 **1. Twitter Sentiment Analysis**
+### **1. Twitter Sentiment Analysis**
 - **Retrieve Tweets**:  
   - Import a pre-collected CSV dataset or fetch real-time tweets using the Twitter API.  
   - Requires a Twitter `Bearer Token`, stored in a `.env` file:
@@ -29,7 +29,7 @@
 
 ---
 
-### 📈 **2. Stock Market Data Analysis (Yahoo Finance)**
+### **2. Stock Market Data Analysis (Yahoo Finance)**
 - **Select a Stock**: Fetch historical data for a specific stock.  
 - **Compute Technical Indicators**:
   - **SMA (Simple Moving Average)**
@@ -41,24 +41,24 @@
 
 ---
 
-### 📊 **3. Portfolio Optimization (Coming Soon)**
+### **3. Portfolio Optimization (Coming Soon)**
 - Future implementation of **risk-return optimization** and **portfolio allocation strategies**.
 
 ---
 
-## 🛠 Installation & Setup
+## Installation & Setup
 
-### ✅ **1. Prerequisites**
+### **1. Prerequisites**
 Ensure you have the following installed:
 - **Python 3.x**
 - **pip**
 - **Git** (optional, for cloning the repository)
 
-### 📥 **2. Install Dependencies**
+### **2. Install Dependencies**
 ```bash
 pip install -r requirements.txt
 ```
-### 📥 **2. Run the Application**
+### **3. Run the Application**
 ```bash
 git clone git@github.com:ZahraHR/StockAnalyzer.git
 cd StockAnalyzer
