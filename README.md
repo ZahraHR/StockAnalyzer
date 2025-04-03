@@ -1,4 +1,4 @@
-# Twitter Stock Sentiment Analysis 
+# Twitter Stock Sentiment Analysis
 
 ## Overview
 
@@ -65,3 +65,10 @@ cd StockAnalyzer
 source ./venv/bin/activate  # For Mac/Linux users
 streamlit run app.py
 ```
+
+## Areas for Improvement
+
+- Error Handling : Add try except blocks to handle errors when loading tweets from the API, CSV files or URLS.
+- Performance Optimization : Avoid redundant reloading of tweet_df if it is already stored
+- Add unit tests
+- Add typing
