@@ -70,5 +70,6 @@ streamlit run app.py
 
 - Error Handling : Add try except blocks to handle errors when loading tweets from the API, CSV files or URLS.
 - Performance Optimization : Avoid redundant reloading of tweet_df if it is already stored
+- Refactor visualization functions for better stability
 - Add unit tests
 - Add typing
