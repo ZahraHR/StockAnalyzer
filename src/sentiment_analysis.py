@@ -1,6 +1,12 @@
+import os
 import streamlit as st
-from utils.Sentiment_utils.twitter_api import load_tweets
+from utils.Sentiment_utils.twitter_api import TwitterSentimentFetcher
 from utils.Sentiment_utils.plots import get_visualization, get_predictions_and_figures
+
+from dotenv import load_dotenv
+
+load_dotenv()
+bearer_token = os.getenv("TWITTER_BEARER_TOKEN")
 
 def display_visualizations(df):
     visualize_option = st.sidebar.radio("Choose an option", ("Word Cloud", "Bar Plot"))
@@ -34,7 +40,8 @@ def twitter_sentiment_analysis():
     elif tweet_option == "Fetch Tweets":
         query = st.text_input("Enter your query", "Tech Stocks -is:retweet lang:en")
 
-    tweet_df = load_tweets(tweet_option, uploaded_file, query)
+    fetcher = TwitterSentimentFetcher(os.getenv("TWITTER_BEARER_TOKEN"))
+    tweet_df = fetcher.load_tweets(tweet_option, uploaded_file, query)
 
     if tweet_df is not None:
         st.session_state.df = tweet_df
